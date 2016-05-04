@@ -12,7 +12,6 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Web;
 using umbraco.BusinessLogic;
-using umbraco.cms.businesslogic.web;
 using umbraco.DataLayer;
 using umbraco.interfaces;
 using umbraco.NodeFactory;
@@ -25,7 +24,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Modules
 {
     public class UrlTrackerModule : IHttpModule
     {
-        static UmbracoDatabase _umbracoDatabase { get { return ApplicationContext.Current.DatabaseContext.Database; } }
+        static ISqlHelper _sqlHelper { get { return Application.SqlHelper; } }
         static Regex _capturingGroupsRegex = new Regex("\\$\\d+");
         static readonly object _lock = new object();
         static bool _urlTrackerInstalled;
@@ -63,7 +62,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Modules
         {
             try
             {
-                if (!_urlTrackerInstalled && ApplicationContext.Current.DatabaseContext.IsDatabaseConfigured)
+                if (!_urlTrackerInstalled && Application.SqlHelper != null)
                 {
                     lock (_lock)
                     {
@@ -219,7 +218,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Modules
                         // Normal matching (database)
                         // Regex matching
                         query = "SELECT * FROM icUrlTracker WHERE Is404 = 0 AND ForceRedirect = @forceRedirect AND (RedirectRootNodeId = @redirectRootNodeId OR RedirectRootNodeId = -1) AND OldRegex IS NOT NULL ORDER BY Inserted DESC";
-                        using (IRecordsReader reader = _umbracoDatabase.ExecuteReader(query, _umbracoDatabase.CreateParameter("forceRedirect", ignoreHttpStatusCode ? 1 : 0), _umbracoDatabase.CreateParameter("redirectRootNodeId", rootNodeId)))
+                        using (IRecordsReader reader = _sqlHelper.ExecuteReader(query, _sqlHelper.CreateParameter("forceRedirect", ignoreHttpStatusCode ? 1 : 0), _sqlHelper.CreateParameter("redirectRootNodeId", rootNodeId)))
                         {
                             Regex regex;
                             while (reader.Read())
@@ -380,7 +379,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Modules
                             if (urlHasQueryString)
                                 query += "@oldUrlQueryString, ";
                             query += "1, @referrer)";
-                            _umbracoDatabase.ExecuteNonQuery(query, _umbracoDatabase.CreateParameter("oldUrl", urlWithoutQueryString), _umbracoDatabase.CreateParameter("redirectRootNodeId", rootNodeId), _umbracoDatabase.CreateParameter("oldUrlQueryString", request.QueryString.ToString()), _umbracoDatabase.CreateParameter("referrer", request.UrlReferrer != null && !request.UrlReferrer.ToString().Contains(UrlTrackerSettings.ReferrerToIgnore) ? (object)request.UrlReferrer.ToString() : DBNull.Value));
+                            _sqlHelper.ExecuteNonQuery(query, _sqlHelper.CreateParameter("oldUrl", urlWithoutQueryString), _sqlHelper.CreateParameter("redirectRootNodeId", rootNodeId), _sqlHelper.CreateParameter("oldUrlQueryString", request.QueryString.ToString()), _sqlHelper.CreateParameter("referrer", request.UrlReferrer != null && !request.UrlReferrer.ToString().Contains(UrlTrackerSettings.ReferrerToIgnore) ? (object)request.UrlReferrer.ToString() : DBNull.Value));
                         }
                     }
                     if (UrlTrackerSettings.IsNotFoundTrackingDisabled)
@@ -404,7 +403,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Modules
         static void LoadUrlTrackerMatchesFromDatabase(HttpRequest request, string urlWithoutQueryString, bool urlHasQueryString, string shortestUrl, int rootNodeId, ref string redirectUrl, ref int? redirectHttpCode, ref bool redirectPassThroughQueryString)
         {
             string query = "SELECT * FROM icUrlTracker WHERE Is404 = 0 AND ForceRedirect = 0 AND (RedirectRootNodeId = @redirectRootNodeId OR RedirectRootNodeId IS NULL OR RedirectRootNodeId = -1) AND (OldUrl = @url OR OldUrl = @shortestUrl) ORDER BY CASE WHEN RedirectHttpCode = 410 THEN 2 ELSE 1 END, OldUrlQueryString DESC";
-            using (IRecordsReader reader = _umbracoDatabase.ExecuteReader(query, _umbracoDatabase.CreateParameter("redirectRootNodeId", rootNodeId), _umbracoDatabase.CreateParameter("url", urlWithoutQueryString), _umbracoDatabase.CreateParameter("shortestUrl", shortestUrl)))
+            using (IRecordsReader reader = _sqlHelper.ExecuteReader(query, _sqlHelper.CreateParameter("redirectRootNodeId", rootNodeId), _sqlHelper.CreateParameter("url", urlWithoutQueryString), _sqlHelper.CreateParameter("shortestUrl", shortestUrl)))
             {
                 while (reader.Read())
                 {

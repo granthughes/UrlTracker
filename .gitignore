@@ -8,3 +8,4 @@ TODO.txt
 /UrlTracker.nupkg
 /.vs
 /packages
+/App_Data/NuGetBackup
