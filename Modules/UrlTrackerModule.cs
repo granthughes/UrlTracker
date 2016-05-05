@@ -270,7 +270,9 @@ namespace InfoCaster.Umbraco.UrlTracker.Modules
                         if (forcedRedirects == null || !forcedRedirects.Any())
                             return;
 
-                        foreach (var match in forcedRedirects.Select(x => new { UrlTrackerModel = x, Regex = new Regex(x.OldRegex) }).Where(x => x.Regex.IsMatch(url)))
+                        foreach (var match in forcedRedirects.Where(x => x.RedirectRootNodeId == -1 || x.RedirectRootNodeId == rootNodeId)
+                            .Select(x => new { UrlTrackerModel = x, Regex = new Regex(x.OldRegex) })
+                            .Where(x => x.Regex.IsMatch(url)))
                         {
                             LoggingHelper.LogInformation("UrlTracker HttpModule | Regex match found");
                             if (match.UrlTrackerModel.RedirectNodeId.HasValue)
