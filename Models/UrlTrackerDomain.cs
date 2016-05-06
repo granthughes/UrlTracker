@@ -28,11 +28,11 @@ namespace InfoCaster.Umbraco.UrlTracker.Models
                         {
                             /*var url = new Node(node.Id).Url;
                             return url;*/
-                            return Node.Url; // do not re-instantiate
+                            return node.Url; // do not re-instantiate
                         }
                         else
                         {
-                            return string.Format("{0}{1}{2}", HttpContext.Current != null ? HttpContext.Current.Request.Url.Scheme : Uri.UriSchemeHttp, Uri.SchemeDelimiter, HttpContext.Current.Request.Url.Host + "/" + Node.Parent.UrlName + "/" + Node.UrlName);
+                            return string.Format("{0}{1}{2}", HttpContext.Current != null ? HttpContext.Current.Request.Url.Scheme : Uri.UriSchemeHttp, Uri.SchemeDelimiter, HttpContext.Current.Request.Url.Host + "/" + node.Parent.UrlName + "/" + node.UrlName);
                         }
                     }
                 }
