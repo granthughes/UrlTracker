@@ -169,7 +169,10 @@ namespace InfoCaster.Umbraco.UrlTracker
             try
 #endif
             {
-                UrlTrackerRepository.AddGoneEntryByNodeId(doc.Id);
+                if (!UrlTrackerSettings.IsRemovedContentTrackingDisabled)
+                {
+                    UrlTrackerRepository.AddGoneEntryByNodeId(doc.Id);
+                }
             }
 #if !DEBUG
             catch (Exception ex)

@@ -275,7 +275,33 @@ namespace InfoCaster.Umbraco.UrlTracker
                 return _forcedRedirectCacheTimeoutSeconds.Value;
             }
         }
-        
+
+        /// <summary>
+        /// Returns wether or not removed content (410) tracking is disabled.
+        /// Set to true when you want content unpublishes and deletions to result in 404 instead of 410
+        /// </summary>
+        /// <remarks>
+        /// appSetting: 'urlTracker:removedContentTrackingDisabled'
+        /// </remarks>
+        public static bool IsRemovedContentTrackingDisabled
+        {
+            get
+            {
+                if (!_isRemovedContentTrackingDisabled.HasValue)
+                {
+                    bool isDisabled = false;
+                    if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["urlTracker:removedContentTrackingDisabled"]))
+                    {
+                        bool parsedAppSetting;
+                        if (bool.TryParse(ConfigurationManager.AppSettings["urlTracker:removedContentTrackingDisabled"], out parsedAppSetting))
+                            isDisabled = parsedAppSetting;
+                    }
+                    _isRemovedContentTrackingDisabled = isDisabled;
+                }
+                return _isRemovedContentTrackingDisabled.Value;
+            }
+        }
+
 
         static bool? _isDisabled;
         static bool? _enableLogging;
@@ -286,5 +312,6 @@ namespace InfoCaster.Umbraco.UrlTracker
         static bool? _hasDomainOnChildNode;
         static bool? _forcedRedirectCacheTimeoutEnabled;
         static int? _forcedRedirectCacheTimeoutSeconds;
+        static bool? _isRemovedContentTrackingDisabled;
     }
 }
