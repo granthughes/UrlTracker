@@ -8,6 +8,7 @@ using umbraco.NodeFactory;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
+using Umbraco.Web.Routing;
 
 namespace InfoCaster.Umbraco.UrlTracker.Extensions
 {
@@ -45,13 +46,13 @@ namespace InfoCaster.Umbraco.UrlTracker.Extensions
         {
             if (node == null)
                 throw new ArgumentNullException("node");
-
+            
             INode parent = node;
             INode deepParent = node;
             INode deepNode = node;
             while (parent != null)
             {
-                List<IDomain> domains = _domainService.GetAssignedDomains(parent.Id, true).ToList(); // Not sure about the includeWildcards param
+                List<IDomain> domains = _domainService.GetAssignedDomains(parent.Id, false).ToList(); 
                 if (domains != null && domains.Any()){
                     node= (Node)parent;
                     break;
@@ -62,7 +63,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Extensions
             if(UrlTrackerSettings.HasDomainOnChildNode){
                 while (deepParent != null && deepParent.Parent != null)
                 {
-                    List<IDomain> domains = _domainService.GetAssignedDomains(deepParent.Parent.Id, true).ToList(); // Not sure about the includeWildcards param
+                    List<IDomain> domains = _domainService.GetAssignedDomains(deepParent.Parent.Id, false).ToList(); 
                     if (domains != null && domains.Any()){
                         deepNode = (Node)deepParent;
                         break;
