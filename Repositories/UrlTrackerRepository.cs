@@ -25,6 +25,7 @@ namespace InfoCaster.Umbraco.UrlTracker.Repositories
         #region Add
         public static bool AddUrlMapping(IContent content, int rootNodeId, string url, AutoTrackingTypes type, bool isChild = false)
         {
+            var addedRedirects = false;
             if (url != "#" && content.Template != null && content.Template.Id > 0)
             {
                 string notes = isChild ? "An ancestor" : "This page";
@@ -69,20 +70,22 @@ namespace InfoCaster.Umbraco.UrlTracker.Repositories
                         query = "INSERT INTO icUrlTracker (RedirectRootNodeId, RedirectNodeId, OldUrl, Notes) VALUES (@rootNodeId, @nodeId, @url, @notes)";
                         _sqlHelper.ExecuteNonQuery(query, _sqlHelper.CreateParameter("rootNodeId", rootNodeId), _sqlHelper.CreateParameter("nodeId", content.Id), _sqlHelper.CreateStringParameter("url", url), _sqlHelper.CreateStringParameter("notes", notes));
 
-                        if (content.Children().Any())
-                        {
-                            foreach (IContent child in content.Children())
-                            {
-                                Node node = new Node(child.Id);
-                                AddUrlMapping(child, rootNodeId, node.NiceUrl, type, true);
-                            }
-                        }
-
-                        return true;
+                        addedRedirects = true;
                     }
                 }
             }
-            return false;
+            
+            var children = content.Children().ToArray();
+            if (children.Any())
+            {
+                foreach (IContent child in children)
+                {
+                    Node node = new Node(child.Id);
+                    addedRedirects |= AddUrlMapping(child, rootNodeId, node.NiceUrl, type, true);
+                }
+            }
+
+            return addedRedirects;
         }
 
         public static void AddUrlTrackerEntry(UrlTrackerModel urlTrackerModel)
